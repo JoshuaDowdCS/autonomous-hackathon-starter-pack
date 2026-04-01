@@ -1,0 +1,50 @@
+# Environment credentials
+.env
+.env.*
+!.env.example
+
+# Python caches and packaging
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+pip-wheel-metadata/
+htmlcov/
+.coverage
+.coverage.*
+.cache/
+.mypy_cache/
+.pytest_cache/
+*.log
+
+# Virtual environments
+.envrc
+env/
+.venv/
+venv/
+ENV/
+
+# Database artifacts
+*.db
+*.sqlite3
+*.sqlite
+
+# Node artifacts
+node_modules/
+/npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+dist-ssr/
+
+# IDE & OS cruft
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# UI build assets
+ui/dist/
+ui/dist-ssr/

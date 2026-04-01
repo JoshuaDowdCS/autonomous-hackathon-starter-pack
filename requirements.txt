@@ -1,0 +1,4 @@
+crewai
+PyYAML
+requests
+beautifulsoup4

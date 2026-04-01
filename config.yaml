@@ -1,0 +1,14 @@
+project_description: "A data-driven hackathon project."
+data_source:
+  url: ""
+  file_path: "data/sample.csv"
+data_strategy: "local"
+output_schema: |
+  {
+    "type": "object",
+    "properties": {
+      "insightTitle": { "type": "string" },
+      "dataPoints": { "type": "array", "items": { "type": "string" } },
+      "actionableAdvice": { "type": "string" }
+    }
+  }
