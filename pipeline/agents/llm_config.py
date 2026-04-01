@@ -3,7 +3,7 @@ import os
 from crewai import LLM
 
 LOCAL_LLM_PROVIDER = os.getenv("LOCAL_LLM_PROVIDER", "openai").strip()
-LOCAL_LLM_BASE_URL = os.getenv("OPENAI_API_BASE", "http://localhost:8000/v1").rstrip("/")
+LOCAL_LLM_BASE_URL = os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1").rstrip("/")
 LOCAL_LLM_API_KEY = os.getenv("OPENAI_API_KEY", "dummy")
 LOCAL_LLM_DEFAULT_MODEL = os.getenv("OPENAI_MODEL_NAME", "deepseek-v3")
 LOCAL_LLM_EVAL_MODEL = os.getenv("OPENAI_EVAL_MODEL_NAME", LOCAL_LLM_DEFAULT_MODEL)
