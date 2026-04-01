@@ -1,30 +1,45 @@
-from crewai import LLM
 import os
 
-KECK_OLLAMA_URL = "http://localhost:11434"
-KECK_DEFAULT_MODEL = "llama3.1:405b"
-KECK_EVAL_MODEL = "llama3.1:70b"
-KECK_QA_MODEL = "gpt-oss:20b"
-KECK_MANAGER_MODEL = "llama3.1:405b"
+from crewai import LLM
+
+LOCAL_LLM_PROVIDER = os.getenv("LOCAL_LLM_PROVIDER", "openai").strip()
+LOCAL_LLM_BASE_URL = os.getenv("OPENAI_API_BASE", "http://localhost:8000/v1").rstrip("/")
+LOCAL_LLM_API_KEY = os.getenv("OPENAI_API_KEY", "dummy")
+LOCAL_LLM_DEFAULT_MODEL = os.getenv("OPENAI_MODEL_NAME", "deepseek-v3")
+LOCAL_LLM_EVAL_MODEL = os.getenv("OPENAI_EVAL_MODEL_NAME", LOCAL_LLM_DEFAULT_MODEL)
+LOCAL_LLM_QA_MODEL = os.getenv("OPENAI_QA_MODEL_NAME", LOCAL_LLM_DEFAULT_MODEL)
+LOCAL_LLM_MANAGER_MODEL = os.getenv("OPENAI_MANAGER_MODEL_NAME", LOCAL_LLM_DEFAULT_MODEL)
+LOCAL_LLM_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
 
 
-def get_keck_llm(model: str = KECK_DEFAULT_MODEL):
-    """Returns an LLM configured for the Keck Cluster's Ollama endpoint."""
+def _qualify_model_name(model: str) -> str:
+    if "/" in model:
+        return model
+    return f"{LOCAL_LLM_PROVIDER}/{model}"
+
+
+def get_local_llm(model: str = LOCAL_LLM_DEFAULT_MODEL, temperature: float = LOCAL_LLM_TEMPERATURE):
+    """Return an environment-driven LLM config for local OpenAI-compatible backends."""
     return LLM(
-        model=model,
-        base_url=KECK_OLLAMA_URL
+        model=_qualify_model_name(model),
+        base_url=LOCAL_LLM_BASE_URL,
+        api_key=LOCAL_LLM_API_KEY,
+        temperature=temperature,
     )
 
 
+def get_keck_llm(model: str = LOCAL_LLM_DEFAULT_MODEL):
+    """Backward-compatible wrapper used by the existing agent factory modules."""
+    return get_local_llm(model=model)
+
+
 def get_keck_eval_llm():
-    """Provide the evaluator with the Llama 3.1 70B checkpoint."""
-    return get_keck_llm(model=KECK_EVAL_MODEL)
+    return get_local_llm(model=LOCAL_LLM_EVAL_MODEL, temperature=0.0)
+
 
 def get_manager_llm():
-    """Route CrewAI orchestration through the local Llama 3.1 405B endpoint."""
-    return get_keck_llm(model=KECK_MANAGER_MODEL)
+    return get_local_llm(model=LOCAL_LLM_MANAGER_MODEL, temperature=0.1)
 
 
 def get_qa_llm():
-    """Point UI QA and Codex tooling at the GPU-friendly GPT-OSS 20B checkpoint."""
-    return get_keck_llm(model=KECK_QA_MODEL)
+    return get_local_llm(model=LOCAL_LLM_QA_MODEL, temperature=0.0)

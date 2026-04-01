@@ -1,6 +1,7 @@
 import yaml
 import os
 
+from db.state_store import init_db
 from db.state_store import set_state
 from pipeline.crew_manager import run_crew_pipeline
 
@@ -14,6 +15,7 @@ def run_pipeline(data_source: str, project_description: str, data_strategy: str)
     print(f"Data source: {data_source}")
     print(f"Data strategy: {data_strategy}")
     
+    init_db()
     set_state("pipeline", "running", "Pipeline started")
     
     # Run the Crew AI manager to route requests
@@ -21,9 +23,11 @@ def run_pipeline(data_source: str, project_description: str, data_strategy: str)
         result = run_crew_pipeline(data_source, project_description, data_strategy)
         set_state("pipeline", "complete", str(result))
         print("Pipeline execution completed successfully.")
+        return result
     except Exception as e:
         set_state("pipeline", "failed", str(e))
         print(f"Pipeline failed: {e}")
+        raise
 
 if __name__ == "__main__":
     config = load_config()

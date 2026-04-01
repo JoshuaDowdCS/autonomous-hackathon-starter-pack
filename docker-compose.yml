@@ -1,0 +1,160 @@
+services:
+  deepseek-vllm:
+    image: vllm/vllm-openai:latest
+    container_name: deepseek_v3_inference
+    runtime: nvidia
+    ipc: host
+    environment:
+      CUDA_VISIBLE_DEVICES: "${CUDA_VISIBLE_DEVICES:-0,1,2,3,4,5}"
+      HUGGING_FACE_HUB_TOKEN: "${HUGGING_FACE_HUB_TOKEN:-}"
+      VLLM_ATTENTION_BACKEND: "${VLLM_ATTENTION_BACKEND:-flash_attn}"
+      VLLM_GPU_MEMORY_UTILIZATION: "${VLLM_GPU_MEMORY_UTILIZATION:-0.90}"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${SCRATCH_ROOT:-./.runtime}/vllm_cache:/root/.cache/huggingface
+      - ${SCRATCH_ROOT:-./.runtime}/vllm_logs:/logs
+    command: >
+      --host 0.0.0.0
+      --port 8000
+      --model deepseek-ai/DeepSeek-V3
+      --served-model-name ${OPENAI_MODEL_NAME:-deepseek-v3}
+      --tensor-parallel-size 6
+      --dtype float16
+      --max-model-len ${VLLM_MAX_MODEL_LEN:-32768}
+      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION:-0.90}
+      --max-num-seqs ${VLLM_MAX_NUM_SEQS:-64}
+      --max-num-batched-tokens ${VLLM_MAX_BATCHED_TOKENS:-131072}
+      --trust-remote-code
+      --disable-log-requests
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+    restart: unless-stopped
+    networks:
+      - hackathon_net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 6
+              capabilities: [gpu]
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant_memory_db
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-hackathon_key_change_me}
+    volumes:
+      - ${SCRATCH_ROOT:-./.runtime}/qdrant_data:/qdrant/storage
+      - ${SCRATCH_ROOT:-./.runtime}/qdrant_snapshots:/qdrant/snapshots
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - hackathon_net
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_embeddings
+    ports:
+      - "11434:11434"
+    volumes:
+      - ${SCRATCH_ROOT:-./.runtime}/ollama_models:/root/.ollama
+    environment:
+      CUDA_VISIBLE_DEVICES: ""
+      OLLAMA_HOST: 0.0.0.0:11434
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - hackathon_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - ${SCRATCH_ROOT:-./.runtime}/redis_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 20gb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - hackathon_net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    container_name: hackathon_frontend
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+    networks:
+      - hackathon_net
+
+  agent-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.agents
+    container_name: hackathon_agents
+    environment:
+      OPENAI_API_BASE: ${OPENAI_API_BASE:-http://deepseek-vllm:8000/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-dummy}
+      OPENAI_MODEL_NAME: ${OPENAI_MODEL_NAME:-deepseek-v3}
+      OPENAI_MANAGER_MODEL_NAME: ${OPENAI_MANAGER_MODEL_NAME:-deepseek-v3}
+      OPENAI_EVAL_MODEL_NAME: ${OPENAI_EVAL_MODEL_NAME:-deepseek-v3}
+      OPENAI_QA_MODEL_NAME: ${OPENAI_QA_MODEL_NAME:-deepseek-v3}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-hackathon_key_change_me}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_EMBED_MODEL: ${OLLAMA_EMBED_MODEL:-nomic-embed-text}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      STAGEHAND_UI_URL: ${STAGEHAND_UI_URL:-http://frontend:5173}
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8001:8001"
+    volumes:
+      - ${SCRATCH_ROOT:-./.runtime}/agent_logs:/app/logs
+      - ${SCRATCH_ROOT:-./.runtime}/agent_workdir:/app/workdir
+    depends_on:
+      deepseek-vllm:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - hackathon_net
+
+networks:
+  hackathon_net:
+    driver: bridge

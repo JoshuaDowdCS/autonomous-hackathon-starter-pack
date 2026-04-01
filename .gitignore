@@ -48,3 +48,4 @@ Thumbs.db
 # UI build assets
 ui/dist/
 ui/dist-ssr/
+.runtime/
