@@ -17,7 +17,7 @@ docker compose up --build -d
 ## Verify
 
 ```bash
-curl http://localhost:8000/v1/models
+curl http://localhost:11434/v1/models
 curl http://localhost:8001/health
 curl http://localhost:5173
 ```
