@@ -5,7 +5,7 @@ services:
     runtime: nvidia
     ipc: host
     environment:
-      CUDA_VISIBLE_DEVICES: "${DEEPSEEK_CUDA_VISIBLE_DEVICES:-1,2,4,5}"
+      CUDA_VISIBLE_DEVICES: "${DEEPSEEK_CUDA_VISIBLE_DEVICES:-0,1}"
       HUGGING_FACE_HUB_TOKEN: "${HUGGING_FACE_HUB_TOKEN:-}"
       HF_TOKEN: "${HUGGING_FACE_HUB_TOKEN:-}"
     ports:
@@ -19,7 +19,7 @@ services:
       --port 8000
       --model-path ${DEEPSEEK_MODEL_ID:-deepseek-ai/DeepSeek-R1-Distill-Llama-70B}
       --served-model-name ${OPENAI_MANAGER_MODEL_NAME:-deepseek-r1-distill-llama-70b}
-      --tp ${DEEPSEEK_TENSOR_PARALLEL_SIZE:-4}
+      --tp ${DEEPSEEK_TENSOR_PARALLEL_SIZE:-2}
       --dtype bfloat16
       --context-length ${DEEPSEEK_CONTEXT_LENGTH:-131072}
       --mem-fraction-static ${DEEPSEEK_MEM_FRACTION_STATIC:-0.93}
@@ -41,7 +41,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: ${DEEPSEEK_GPU_COUNT:-4}
+              count: ${DEEPSEEK_GPU_COUNT:-2}
               capabilities: [gpu]
 
   llama-vllm:
@@ -50,7 +50,7 @@ services:
     runtime: nvidia
     ipc: host
     environment:
-      CUDA_VISIBLE_DEVICES: "${LLAMA_CUDA_VISIBLE_DEVICES:-6,7}"
+      CUDA_VISIBLE_DEVICES: "${LLAMA_CUDA_VISIBLE_DEVICES:-2,4}"
       HUGGING_FACE_HUB_TOKEN: "${HUGGING_FACE_HUB_TOKEN:-}"
       VLLM_ATTENTION_BACKEND: "${VLLM_ATTENTION_BACKEND:-flash_attn}"
       VLLM_GPU_MEMORY_UTILIZATION: "${LLAMA_GPU_MEMORY_UTILIZATION:-0.98}"

@@ -166,7 +166,7 @@ The code supports separate model names and endpoints by role:
 
 As shipped today, the Docker defaults route:
 
-- workers, QA, and memory LLM traffic to the local Llama 3.3 70B endpoint on GPUs `6,7`
+- workers, QA, and memory LLM traffic to the local Llama 3.3 70B endpoint on GPUs `2,4`
 - manager and evaluator to the local DeepSeek endpoint
 - memory embeddings to Ollama and vectors to Qdrant
 

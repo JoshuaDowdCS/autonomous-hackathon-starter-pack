@@ -133,8 +133,8 @@ start_stack() {
   load_env_file
   ensure_runtime_dirs
 
-  log "DeepSeek model ${DEEPSEEK_MODEL_ID:-deepseek-ai/DeepSeek-R1-Distill-Llama-70B} on GPUs ${DEEPSEEK_CUDA_VISIBLE_DEVICES:-1,2,4,5}"
-  log "Llama model ${LLAMA_MODEL_ID:-meta-llama/Llama-3.3-70B-Instruct} on GPUs ${LLAMA_CUDA_VISIBLE_DEVICES:-6,7}"
+  log "DeepSeek model ${DEEPSEEK_MODEL_ID:-deepseek-ai/DeepSeek-R1-Distill-Llama-70B} on GPUs ${DEEPSEEK_CUDA_VISIBLE_DEVICES:-0,1}"
+  log "Llama model ${LLAMA_MODEL_ID:-meta-llama/Llama-3.3-70B-Instruct} on GPUs ${LLAMA_CUDA_VISIBLE_DEVICES:-2,4}"
 
   log "Building and starting core services"
   compose up --build -d qdrant redis ollama frontend deepseek-vllm llama-vllm
