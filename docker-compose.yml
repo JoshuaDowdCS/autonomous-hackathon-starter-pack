@@ -2,7 +2,7 @@ services:
   deepseek-vllm:
     image: lmsysorg/sglang:latest
     container_name: deepseek_r1_sglang
-    runtime: nvidia
+    gpus: all
     ipc: host
     environment:
       CUDA_VISIBLE_DEVICES: "${DEEPSEEK_CUDA_VISIBLE_DEVICES:-0,1}"
@@ -47,7 +47,7 @@ services:
   llama-vllm:
     image: vllm/vllm-openai:latest
     container_name: llama33_70b_inference
-    runtime: nvidia
+    gpus: all
     ipc: host
     environment:
       CUDA_VISIBLE_DEVICES: "${LLAMA_CUDA_VISIBLE_DEVICES:-2,4}"
