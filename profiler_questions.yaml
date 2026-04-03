@@ -1,6 +1,6 @@
 questions:
-  - "What is your main goal with this project?"
-  - "How familiar are you with the data domain?"
-  - "What specific metrics are you most interested in exploring?"
-  - "Who is the target audience for the insights generated?"
-  - "Do you prefer a high-level summary or a detailed granular breakdown?"
+  - "Who is the first user this MVP is built for, and what does that person expect from an at-home yoga coach?"
+  - "What session length, camera setup, and physical environment should the product assume?"
+  - "What kind of spoken feedback feels helpful during movement instead of distracting?"
+  - "Which form issues should be coached in MVP, and which should be deferred for safety or complexity reasons?"
+  - "What session notes will make the product feel genuinely useful after practice ends?"

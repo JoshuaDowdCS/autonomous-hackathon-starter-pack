@@ -1,14 +1,33 @@
-project_description: "A data-driven hackathon project."
+project_description: "Build an at-home yoga form coach web app that uses the Gemini Live API to watch a user's live session, deliver spoken form cues through the user's active audio output, and save notes on what they did well, what to keep working on, and what they learned."
 data_source:
   url: ""
-  file_path: "data/sample.csv"
+  file_path: "data/yoga_form_coach_brief.md"
 data_strategy: "local"
 output_schema: |
   {
     "type": "object",
     "properties": {
-      "insightTitle": { "type": "string" },
-      "dataPoints": { "type": "array", "items": { "type": "string" } },
-      "actionableAdvice": { "type": "string" }
-    }
+      "productName": { "type": "string" },
+      "oneLiner": { "type": "string" },
+      "targetUser": { "type": "string" },
+      "coreExperience": { "type": "array", "items": { "type": "string" } },
+      "frontendBuildPlan": { "type": "array", "items": { "type": "string" } },
+      "backendBuildPlan": { "type": "array", "items": { "type": "string" } },
+      "geminiLiveIntegration": { "type": "array", "items": { "type": "string" } },
+      "coachingRubric": { "type": "array", "items": { "type": "string" } },
+      "sessionSummarySchema": { "type": "array", "items": { "type": "string" } },
+      "launchRisks": { "type": "array", "items": { "type": "string" } }
+    },
+    "required": [
+      "productName",
+      "oneLiner",
+      "targetUser",
+      "coreExperience",
+      "frontendBuildPlan",
+      "backendBuildPlan",
+      "geminiLiveIntegration",
+      "coachingRubric",
+      "sessionSummarySchema",
+      "launchRisks"
+    ]
   }

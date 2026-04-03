@@ -1,12 +1,41 @@
-# Local model choices
+# Model Choices
 
-This project now routes every Crew agent through your local Ollama endpoint rather than cloud APIs. The choices below pair each agent group with the most fitting locally hosted checkpoint.
+The repo is now wired for a split local serving layout.
 
-## Llama 3.1 8B (primary pipeline + QA)
-- get_keck_llm() now defaults to `llama3.1:8b`, so the data loader, validator, analyzer, profiler, interpreter, formatter, and delivery agents run on a faster, lighter checkpoint. See pipeline/agents/data_layer.py:5-45, pipeline/agents/user_layer.py:4-32, pipeline/agents/delivery_layer.py:1-19, and pipeline/agents/llm_config.py:4-45.
-- The UI QA agent also points to `llama3.1:8b` by default so interactive checks stay responsive.
+## Default serving topology
 
-## DeepSeek V3 (manager + evaluator)
-- `OPENAI_MANAGER_MODEL_NAME` and `OPENAI_EVAL_MODEL_NAME` default to `deepseek-v3` so the orchestrator and evaluator still use the heavyweight checkpoint for harder planning or scoring passes.
+- `deepseek-vllm` serves `deepseek-r1-distill-llama-70b` on GPUs `1,2,4,5`
+- `llama-vllm` serves `llama-3.3-70b-instruct` on GPUs `6,7`
+- `ollama` serves the embedding model for shared memory
+- `qdrant` stores vectors for Mem0
 
-Together these choices keep most tasks fast while preserving DeepSeek for heavy reasoning; override the `OPENAI_*_MODEL_NAME` environment variables if you want different checkpoints.
+## Role routing
+
+`pipeline/agents/llm_config.py` supports per-role endpoint and model routing:
+
+- worker agents use `OPENAI_WORKER_API_BASE` and `OPENAI_WORKER_MODEL_NAME`
+- manager uses `OPENAI_MANAGER_API_BASE` and `OPENAI_MANAGER_MODEL_NAME`
+- evaluator uses `OPENAI_EVAL_API_BASE` and `OPENAI_EVAL_MODEL_NAME`
+- QA/code-fix agents use `OPENAI_QA_API_BASE` and `OPENAI_QA_MODEL_NAME`
+
+`pipeline/runtime.py` also supports separate memory LLM routing through:
+
+- `OPENAI_MEMORY_API_BASE`
+- `OPENAI_MEMORY_MODEL_NAME`
+
+## Shipped defaults
+
+The checked-in `.env.example` config defaults to:
+
+- Llama 3.3 70B for worker, QA, and memory LLM traffic
+- DeepSeek for manager and evaluator traffic
+- Ollama `nomic-embed-text` for embeddings
+
+## Operational note
+
+The Docker stack now supports true multi-endpoint routing inside the app, but it still assumes one model per serving container by default:
+
+- one DeepSeek service
+- one Llama service
+
+If you later want multiple DeepSeek or Llama instances, more advanced load balancing, or different GPU splits, that becomes a deployment-planning step rather than an application wiring step.

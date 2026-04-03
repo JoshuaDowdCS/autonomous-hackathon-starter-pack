@@ -23,9 +23,21 @@ class HackathonMemoryManager:
         self.qdrant_url = os.getenv("QDRANT_URL", "http://qdrant:6333")
         self.qdrant_api_key = os.getenv("QDRANT_API_KEY", "")
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
-        self.openai_api_base = os.getenv("OPENAI_API_BASE", "http://deepseek-vllm:8000/v1")
-        self.openai_api_key = os.getenv("OPENAI_API_KEY", "dummy")
-        self.openai_model_name = os.getenv("OPENAI_MODEL_NAME", "deepseek-v3")
+        self.openai_api_base = os.getenv(
+            "OPENAI_MEMORY_API_BASE",
+            os.getenv(
+                "OPENAI_WORKER_API_BASE",
+                os.getenv("OPENAI_API_BASE", "http://llama-vllm:8000/v1"),
+            ),
+        )
+        self.openai_api_key = os.getenv(
+            "OPENAI_MEMORY_API_KEY",
+            os.getenv("OPENAI_WORKER_API_KEY", os.getenv("OPENAI_API_KEY", "dummy")),
+        )
+        self.openai_model_name = os.getenv(
+            "OPENAI_MEMORY_MODEL_NAME",
+            os.getenv("OPENAI_WORKER_MODEL_NAME", os.getenv("OPENAI_MODEL_NAME", "llama-3.3-70b-instruct")),
+        )
         self.embedding_model_name = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
         self.collection_name = os.getenv("MEMORY_COLLECTION_NAME", "hackathon_agents")
         self.redis_client = None

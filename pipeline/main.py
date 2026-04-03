@@ -1,6 +1,10 @@
 import yaml
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from db.state_store import init_db
 from db.state_store import set_state
 from pipeline.crew_manager import run_crew_pipeline

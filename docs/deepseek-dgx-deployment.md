@@ -1,41 +1,44 @@
-# DeepSeek-V3 DGX Deployment
+# DGX Deployment
 
-This repo now includes a local-only deployment path for a DGX-style box:
+This repo now assumes a split local serving stack on a GPU server:
 
-- `docker-compose.yml` starts vLLM, Qdrant, Ollama, Redis, the agent API, and the Vite frontend.
-- `Dockerfile.agents` builds the CrewAI orchestration container with Python and Node runtime support.
-- `pipeline/api.py` exposes `GET /health`, `GET /status/{key}`, and `POST /run`.
+- `deepseek-vllm` for manager and evaluator traffic
+- `llama-vllm` for worker and QA traffic
+- `ollama` for embeddings
+- `qdrant` for vector storage
+- `redis` for caching
 
 ## Boot
 
 ```bash
-cp .env.example .env
-mkdir -p "${SCRATCH_ROOT:-./.runtime}"
-docker compose up --build -d
+./bootstrap.sh up
 ```
 
 ## Verify
 
 ```bash
-curl http://localhost:11434/v1/models
+curl http://localhost:8000/v1/models
+curl http://localhost:8002/v1/models
 curl http://localhost:8001/health
 curl http://localhost:5173
 ```
 
-## Run the Crew
+## Run the crew
 
 ```bash
 curl -X POST http://localhost:8001/run \
   -H 'Content-Type: application/json' \
   -d '{
-    "data_source": "data/sample.csv",
-    "project_description": "Build a real-time collaborative code editor",
-    "data_strategy": "local"
+    "data_source": "data/yoga_form_coach_brief.md",
+    "project_description": "Build an at-home yoga form coach web app that uses the Gemini Live API to watch a user's live session, deliver spoken form cues through the user's active audio output, and save notes on what they did well, what to keep working on, and what they learned.",
+    "data_strategy": "local",
+    "use_cache": true
   }'
 ```
 
 ## Notes
 
-- The agent service is wired for 10 CrewAI agents plus a hierarchical manager LLM.
-- Shared memory is best-effort. Redis caching is used immediately; Mem0/Qdrant/Ollama are initialized when available.
-- `OPENAI_MODEL_NAME` must match the vLLM `--served-model-name`.
+- The default GPU split in `.env.example` is GPUs `1,2,4,5` for DeepSeek R1 Distill 70B and GPUs `6,7` for Llama 3.3 70B.
+- The app is now aware of different endpoints for worker, manager, evaluator, QA, memory LLM, embedding, and vector-store traffic.
+- `QDRANT_API_KEY` is optional for isolated local deployments.
+- The browser UI uses the same backend `POST /run` path as the curl example.

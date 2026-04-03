@@ -1,0 +1,6 @@
+team,idea_stage,weekly_active_users,retention_30d,mentor_score,budget_usd
+Atlas,prototype,120,0.42,8.1,4000
+Beacon,beta,310,0.58,8.9,8500
+Circuit,concept,45,0.21,6.3,1500
+Drift,beta,520,0.64,9.2,12000
+Echo,prototype,180,0.47,7.4,5000

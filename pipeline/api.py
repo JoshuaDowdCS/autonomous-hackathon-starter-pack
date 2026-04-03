@@ -4,8 +4,12 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+load_dotenv()
 
 from db.state_store import get_state, init_db, set_state
 from pipeline.crew_manager import run_crew_pipeline
@@ -22,7 +26,7 @@ memory_manager = HackathonMemoryManager()
 
 class RunRequest(BaseModel):
     data_source: str = Field(..., description="Local file path or URL for the pipeline input.")
-    project_description: str = Field(..., description="High-level project objective for the crew.")
+    project_description: str = Field(..., description="Implementation brief describing the product the builder should generate.")
     data_strategy: str = Field(default="local", pattern="^(local|web)$")
     use_cache: bool = Field(default=True)
 
@@ -42,6 +46,13 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Hackathon Orchestrator", version="1.0.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
@@ -49,8 +60,37 @@ async def health():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "model": os.getenv("OPENAI_MODEL_NAME", "deepseek-v3"),
-        "base_url": os.getenv("OPENAI_API_BASE", "http://deepseek-vllm:8000/v1"),
+        "model": os.getenv("OPENAI_WORKER_MODEL_NAME", os.getenv("OPENAI_MODEL_NAME", "llama-3.3-70b-instruct")),
+        "base_url": os.getenv("OPENAI_WORKER_API_BASE", os.getenv("OPENAI_API_BASE", "http://llama-vllm:8000/v1")),
+        "backends": {
+            "worker": {
+                "model": os.getenv("OPENAI_WORKER_MODEL_NAME", os.getenv("OPENAI_MODEL_NAME", "llama-3.3-70b-instruct")),
+                "base_url": os.getenv("OPENAI_WORKER_API_BASE", os.getenv("OPENAI_API_BASE", "http://llama-vllm:8000/v1")),
+            },
+            "manager": {
+                "model": os.getenv("OPENAI_MANAGER_MODEL_NAME", os.getenv("OPENAI_MODEL_NAME", "llama-3.3-70b-instruct")),
+                "base_url": os.getenv("OPENAI_MANAGER_API_BASE", os.getenv("OPENAI_API_BASE", "http://llama-vllm:8000/v1")),
+            },
+            "eval": {
+                "model": os.getenv("OPENAI_EVAL_MODEL_NAME", os.getenv("OPENAI_MODEL_NAME", "llama-3.3-70b-instruct")),
+                "base_url": os.getenv("OPENAI_EVAL_API_BASE", os.getenv("OPENAI_API_BASE", "http://llama-vllm:8000/v1")),
+            },
+            "qa": {
+                "model": os.getenv("OPENAI_QA_MODEL_NAME", os.getenv("OPENAI_MODEL_NAME", "llama-3.3-70b-instruct")),
+                "base_url": os.getenv("OPENAI_QA_API_BASE", os.getenv("OPENAI_API_BASE", "http://llama-vllm:8000/v1")),
+            },
+            "memory": {
+                "model": os.getenv("OPENAI_MEMORY_MODEL_NAME", os.getenv("OPENAI_WORKER_MODEL_NAME", os.getenv("OPENAI_MODEL_NAME", "llama-3.3-70b-instruct"))),
+                "base_url": os.getenv("OPENAI_MEMORY_API_BASE", os.getenv("OPENAI_WORKER_API_BASE", os.getenv("OPENAI_API_BASE", "http://llama-vllm:8000/v1"))),
+            },
+            "embedder": {
+                "model": os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text"),
+                "base_url": os.getenv("OLLAMA_BASE_URL", "http://ollama:11434"),
+            },
+            "vector_store": {
+                "url": os.getenv("QDRANT_URL", "http://qdrant:6333"),
+            },
+        },
     }
 
 
