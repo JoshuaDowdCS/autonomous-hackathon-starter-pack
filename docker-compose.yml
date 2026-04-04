@@ -70,7 +70,6 @@ services:
       --gpu-memory-utilization ${LLAMA_GPU_MEMORY_UTILIZATION:-0.98}
       --max-num-seqs ${LLAMA_MAX_NUM_SEQS:-32}
       --max-num-batched-tokens ${LLAMA_MAX_BATCHED_TOKENS:-16384}
-      --disable-log-requests
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
       interval: 30s
